@@ -4,7 +4,7 @@ import { loggerMiddleware } from "./loggerMiddleware";
 
 export const store = configureStore({
   reducer: {
-    search: searchReducer
+    search: searchReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

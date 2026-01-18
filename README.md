@@ -48,28 +48,28 @@ The async request lifecycle is modeled explicitly as a state machine.
 
 ### State Transitions
 
-| From | Event | To |
-|------|-------|-----|
-| `idle` | dispatch search | `loading` |
-| `loading` | success | `success` |
-| `loading` | error | `error` |
-| `loading` | abort | `idle` |
-| `error` | retry | `loading` |
-| `idle` | cache hit | `success` (immediate) |
+| From      | Event           | To                    |
+| --------- | --------------- | --------------------- |
+| `idle`    | dispatch search | `loading`             |
+| `loading` | success         | `success`             |
+| `loading` | error           | `error`               |
+| `loading` | abort           | `idle`                |
+| `error`   | retry           | `loading`             |
+| `idle`    | cache hit       | `success` (immediate) |
 
 ### Conceptual State Shape
 
 ```typescript
 type SearchState = {
   query: string;
-  status: 'idle' | 'loading' | 'success' | 'error';
+  status: "idle" | "loading" | "success" | "error";
   dataByQuery: Record<string, SearchResult[]>;
   error?: string;
   activeRequestId?: string;
   lastDurationMs?: number;
   lastFromCache?: boolean;
   aborted?: boolean;
-}
+};
 ```
 
 ## Cancellation Strategy
@@ -98,13 +98,13 @@ This project intentionally separates observability into two layers.
 
 Domain telemetry represents product-level events. These events are emitted inside the thunk and describe what actually happened from a business perspective.
 
-| Event | Description |
-|-------|-------------|
-| `search.request_start` | A new search request was initiated |
-| `search.request_success` | The request completed successfully |
-| `search.request_error` | The request failed due to a real error |
-| `search.request_aborted` | The request was intentionally cancelled |
-| `search.cache_hit` | Cached data was returned without a network call |
+| Event                    | Description                                     |
+| ------------------------ | ----------------------------------------------- |
+| `search.request_start`   | A new search request was initiated              |
+| `search.request_success` | The request completed successfully              |
+| `search.request_error`   | The request failed due to a real error          |
+| `search.request_aborted` | The request was intentionally cancelled         |
+| `search.cache_hit`       | Cached data was returned without a network call |
 
 Each event is logged as a structured JSON object:
 
@@ -163,12 +163,12 @@ Open the browser and the DevTools console to observe telemetry logs.
 
 ## Demo Scenarios
 
-| Scenario | How to Trigger | Expected Behavior |
-|----------|----------------|-------------------|
-| Success | Search for any term | Transition from `loading` to `success` |
-| Cache hit | Search for the same term again | Immediate `success`, no API call |
-| Error | Search for a term containing "fail" | Transition to `error`, retry available |
-| Abort | Trigger multiple searches quickly | Previous requests are aborted |
+| Scenario  | How to Trigger                      | Expected Behavior                      |
+| --------- | ----------------------------------- | -------------------------------------- |
+| Success   | Search for any term                 | Transition from `loading` to `success` |
+| Cache hit | Search for the same term again      | Immediate `success`, no API call       |
+| Error     | Search for a term containing "fail" | Transition to `error`, retry available |
+| Abort     | Trigger multiple searches quickly   | Previous requests are aborted          |
 
 ## Project Structure
 

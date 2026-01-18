@@ -1,43 +1,48 @@
 import { useMemo, useRef } from "react";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
-import { selectError, selectLastMeta, selectQuery, selectResultsForCurrentQuery, selectStatus } from "../features/search/searchSelectors";
+import {
+  selectError,
+  selectLastMeta,
+  selectQuery,
+  selectResultsForCurrentQuery,
+  selectStatus,
+} from "../features/search/searchSelectors";
 import { runSearch } from "../features/search/searchThunks";
 import SearchResults from "./SearchResults";
 import { setQuery } from "../features/search/searchSlice";
 
 const SearchPage = () => {
-    const dispatch = useAppDispatch();
+  const dispatch = useAppDispatch();
 
-    const query = useAppSelector(selectQuery);
-    const status = useAppSelector(selectStatus);
-    const error = useAppSelector(selectError);
-    const meta = useAppSelector(selectLastMeta);
-    const results = useAppSelector(selectResultsForCurrentQuery);
-    
-    const lastPromiseRef = useRef<any>(null);
+  const query = useAppSelector(selectQuery);
+  const status = useAppSelector(selectStatus);
+  const error = useAppSelector(selectError);
+  const meta = useAppSelector(selectLastMeta);
+  const results = useAppSelector(selectResultsForCurrentQuery);
 
-    const normalized = query.trim();
-    const canSearch = useMemo(
-        () => normalized.length > 0,
-        [normalized]
-    )    
+  const lastPromiseRef = useRef<any>(null);
 
-    const onSearch = () => {
-        if (!normalized) return;
-        
-        if (lastPromiseRef.current?.abort) {
-          lastPromiseRef.current.abort();
-        }
+  const normalized = query.trim();
+  const canSearch = useMemo(() => normalized.length > 0, [normalized]);
 
-        lastPromiseRef.current = dispatch(runSearch({
-            query: normalized
-        }));
+  const onSearch = () => {
+    if (!normalized) return;
+
+    if (lastPromiseRef.current?.abort) {
+      lastPromiseRef.current.abort();
     }
 
-    const onRetry = () => onSearch();
+    lastPromiseRef.current = dispatch(
+      runSearch({
+        query: normalized,
+      })
+    );
+  };
 
-    return (
-        <div
+  const onRetry = () => onSearch();
+
+  return (
+    <div
       style={{
         maxWidth: 760,
         margin: "48px auto",
@@ -48,9 +53,9 @@ const SearchPage = () => {
       <header style={{ marginBottom: 16 }}>
         <h1 style={{ margin: 0, fontSize: 26 }}>RTK State Machine + Telemetry</h1>
         <p style={{ margin: "8px 0 0", color: "#444", lineHeight: 1.45 }}>
-          This demo models async UI behavior as a small state machine and logs the full
-          request lifecycle as structured JSON. Type <code>fail</code> to simulate an error.
-          Repeat a query to hit cache.
+          This demo models async UI behavior as a small state machine and logs the full request
+          lifecycle as structured JSON. Type <code>fail</code> to simulate an error. Repeat a query
+          to hit cache.
         </p>
       </header>
 
@@ -114,9 +119,7 @@ const SearchPage = () => {
         )} */}
       </section>
 
-      {status === "loading" && (
-        <p style={{ marginTop: 12, color: "#333" }}>Loading…</p>
-      )}
+      {status === "loading" && <p style={{ marginTop: 12, color: "#333" }}>Loading…</p>}
 
       {status === "error" && (
         <div style={{ marginTop: 12 }}>
@@ -144,7 +147,7 @@ const SearchPage = () => {
         Open DevTools Console to see telemetry logs as JSON lines.
       </footer>
     </div>
-    )
-}
+  );
+};
 
 export default SearchPage;

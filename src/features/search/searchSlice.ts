@@ -1,50 +1,50 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import { runSearch } from "./searchThunks";
 
-export type SearchStatus = 'idle' | 'loading' | 'success' | 'error';
+export type SearchStatus = "idle" | "loading" | "success" | "error";
 
 export type SearchResult = {
-    id: string;
-    title: string;
-}
+  id: string;
+  title: string;
+};
 
 type SearchState = {
-    query: string;
-    status: SearchStatus;
-    dataByQuery: Record<string, SearchResult[]>;
-    error?: string;
+  query: string;
+  status: SearchStatus;
+  dataByQuery: Record<string, SearchResult[]>;
+  error?: string;
 
-    activeRequestId?: string;
-    lastDurationMs?: number;
-    lastFromCache?: boolean;
-    aborted?: boolean;
-}
+  activeRequestId?: string;
+  lastDurationMs?: number;
+  lastFromCache?: boolean;
+  aborted?: boolean;
+};
 
 const initialState: SearchState = {
-    query: '',
-    status: 'idle',
-    dataByQuery: {},
+  query: "",
+  status: "idle",
+  dataByQuery: {},
 };
 
 const searchSlice = createSlice({
-    name: 'search',
-    initialState,
-    reducers: {
-        setQuery(state, action: PayloadAction<string>) {
-            state.query = action.payload;
-        },
-        resetSearch(state) {
-            state.query = '';
-            state.status = 'idle';
-            state.error = undefined;
-            state.activeRequestId = undefined;
-            state.lastDurationMs = undefined;
-            state.lastFromCache = undefined;
-            state.aborted = undefined;
-        },
+  name: "search",
+  initialState,
+  reducers: {
+    setQuery(state, action: PayloadAction<string>) {
+      state.query = action.payload;
     },
-    extraReducers: (builder) => {
-        builder
+    resetSearch(state) {
+      state.query = "";
+      state.status = "idle";
+      state.error = undefined;
+      state.activeRequestId = undefined;
+      state.lastDurationMs = undefined;
+      state.lastFromCache = undefined;
+      state.aborted = undefined;
+    },
+  },
+  extraReducers: (builder) => {
+    builder
       .addCase(runSearch.pending, (state, action) => {
         state.status = "loading";
         state.error = undefined;
@@ -80,7 +80,7 @@ const searchSlice = createSlice({
         state.lastFromCache = false;
         state.aborted = false;
       });
-    }
+  },
 });
 
 export const { setQuery, resetSearch } = searchSlice.actions;
