@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { selectError, selectLastMeta, selectQuery, selectResultsForCurrentQuery, selectStatus } from "../features/search/searchSelectors";
 import { runSearch } from "../features/search/searchThunks";
@@ -13,16 +13,23 @@ const SearchPage = () => {
     const error = useAppSelector(selectError);
     const meta = useAppSelector(selectLastMeta);
     const results = useAppSelector(selectResultsForCurrentQuery);
+    
+    const lastPromiseRef = useRef<any>(null);
 
     const normalized = query.trim();
     const canSearch = useMemo(
-        () => normalized.length > 0 && status !== 'loading',
-        [normalized, status]
-    )
+        () => normalized.length > 0,
+        [normalized]
+    )    
 
     const onSearch = () => {
         if (!normalized) return;
-        dispatch(runSearch({
+        
+        if (lastPromiseRef.current?.abort) {
+          lastPromiseRef.current.abort();
+        }
+
+        lastPromiseRef.current = dispatch(runSearch({
             query: normalized
         }));
     }
@@ -99,6 +106,12 @@ const SearchPage = () => {
             • <strong>Cache:</strong> hit
           </>
         )}
+        {/* {meta.aborted && (
+          <>
+            {" "}
+            • <strong>Aborted:</strong> true
+          </>
+        )} */}
       </section>
 
       {status === "loading" && (

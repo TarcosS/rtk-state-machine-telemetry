@@ -17,6 +17,7 @@ type SearchState = {
     activeRequestId?: string;
     lastDurationMs?: number;
     lastFromCache?: boolean;
+    aborted?: boolean;
 }
 
 const initialState: SearchState = {
@@ -39,6 +40,7 @@ const searchSlice = createSlice({
             state.activeRequestId = undefined;
             state.lastDurationMs = undefined;
             state.lastFromCache = undefined;
+            state.aborted = undefined;
         },
     },
     extraReducers: (builder) => {
@@ -49,6 +51,7 @@ const searchSlice = createSlice({
         state.activeRequestId = action.meta.requestId;
         state.lastDurationMs = undefined;
         state.lastFromCache = undefined;
+        state.aborted = undefined;
       })
       .addCase(runSearch.fulfilled, (state, action) => {
         // Only accept latest request
@@ -58,14 +61,16 @@ const searchSlice = createSlice({
         state.dataByQuery[action.payload.query] = action.payload.results;
         state.lastDurationMs = action.payload.durationMs;
         state.lastFromCache = action.payload.fromCache;
+        state.aborted = false;
       })
       .addCase(runSearch.rejected, (state, action) => {
         if (state.activeRequestId !== action.meta.requestId) return;
 
-        if (action.payload?.message === "aborted") {
+        if (action.payload?.error?.name.toLowerCase() === "aborterror") {
           // Aborted requests are treated as a neutral outcome
           state.status = "idle";
           state.lastDurationMs = action.payload.durationMs;
+          state.aborted = true;
           return;
         }
 
@@ -73,6 +78,7 @@ const searchSlice = createSlice({
         state.error = action.payload?.message ?? "unknown_error";
         state.lastDurationMs = action.payload?.durationMs;
         state.lastFromCache = false;
+        state.aborted = false;
       });
     }
 });

@@ -13,6 +13,10 @@ type FulfilledPayload = {
 type RejectedPayload = {
     message: "aborted" | "request_failed";
     durationMs: number;
+    error?: {
+        name: "AbortError" | string;
+        message: string;
+    };
 }
 
 function logEvent(payload: Record<string, unknown>) {
@@ -31,7 +35,7 @@ export const runSearch = createAsyncThunk<
     async ({ query }, { getState, signal, requestId, rejectWithValue }) => {
         const started = performance.now();
         const normalized = query.trim();
-
+        
         const cached = getState().search.dataByQuery[normalized];
         if (cached) {
             const durationMs = Math.round(performance.now() - started);
@@ -77,7 +81,7 @@ export const runSearch = createAsyncThunk<
             }
         } catch (error: any) {
             const durationMs = Math.round(performance.now() - started);
-
+            
             if (signal.aborted) {
                 logEvent({
                     event: "search.request_aborted",
