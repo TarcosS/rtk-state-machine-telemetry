@@ -1,6 +1,7 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import { runSearch } from "./searchThunks";
 
-export type SearchStatus = 'idle' | 'loading' | 'succeeded' | 'error';
+export type SearchStatus = 'idle' | 'loading' | 'success' | 'error';
 
 export type SearchResult = {
     id: string;
@@ -12,6 +13,10 @@ type SearchState = {
     status: SearchStatus;
     dataByQuery: Record<string, SearchResult[]>;
     error?: string;
+
+    activeRequestId?: string;
+    lastDurationMs?: number;
+    lastFromCache?: boolean;
 }
 
 const initialState: SearchState = {
@@ -27,29 +32,50 @@ const searchSlice = createSlice({
         setQuery(state, action: PayloadAction<string>) {
             state.query = action.payload;
         },
-        startSearch(state) {
-            state.status = 'loading';
-            state.error = undefined;
-        },
-        searchSuccess(
-            state, 
-            action: PayloadAction<{ query: string; results: SearchResult[] }>
-        ) {
-            const { query, results } = action.payload;
-            state.status = 'succeeded';
-            state.dataByQuery[query] = results;
-        },
-        searchError(state, action: PayloadAction<string>) {
-            state.status = 'error';
-            state.error = action.payload;
-        },
         resetSearch(state) {
             state.query = '';
             state.status = 'idle';
             state.error = undefined;
+            state.activeRequestId = undefined;
+            state.lastDurationMs = undefined;
+            state.lastFromCache = undefined;
         },
     },
+    extraReducers: (builder) => {
+        builder
+      .addCase(runSearch.pending, (state, action) => {
+        state.status = "loading";
+        state.error = undefined;
+        state.activeRequestId = action.meta.requestId;
+        state.lastDurationMs = undefined;
+        state.lastFromCache = undefined;
+      })
+      .addCase(runSearch.fulfilled, (state, action) => {
+        // Only accept latest request
+        if (state.activeRequestId !== action.meta.requestId) return;
+
+        state.status = "success";
+        state.dataByQuery[action.payload.query] = action.payload.results;
+        state.lastDurationMs = action.payload.durationMs;
+        state.lastFromCache = action.payload.fromCache;
+      })
+      .addCase(runSearch.rejected, (state, action) => {
+        if (state.activeRequestId !== action.meta.requestId) return;
+
+        if (action.payload?.message === "aborted") {
+          // Aborted requests are treated as a neutral outcome
+          state.status = "idle";
+          state.lastDurationMs = action.payload.durationMs;
+          return;
+        }
+
+        state.status = "error";
+        state.error = action.payload?.message ?? "unknown_error";
+        state.lastDurationMs = action.payload?.durationMs;
+        state.lastFromCache = false;
+      });
+    }
 });
 
-export const { setQuery, startSearch, searchSuccess, searchError, resetSearch } = searchSlice.actions;
+export const { setQuery, resetSearch } = searchSlice.actions;
 export const searchReducer = searchSlice.reducer;
